@@ -98,6 +98,7 @@ AP_HW_MATEKF405                       125
 AP_HW_NUCLEOF767ZI                    126
 AP_HW_MATEKF405_WING                  127
 AP_HW_AIRBOTF4                        128
+AP_HW_WEACTF405                       129
 AP_HW_SPARKYV2                        130
 AP_HW_OMNIBUSF4PRO                    131
 AP_HW_ANYFCF7                         132

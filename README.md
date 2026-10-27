@@ -53,6 +53,19 @@ It is continually being expanded to provide support for new emerging vehicle typ
 
 - Developer chat: <https://discord.com/channels/ardupilot>
 
+## WeActF405 Flashing
+
+For the initial installation, hold **BOOT0** while plugging the board into
+USB-C to enter the STM32 DFU bootloader. Flash the vehicle
+`*_with_bl.hex` file at `0x08000000` using `dfu-util` or
+STM32CubeProgrammer. The combined HEX file includes the ArduPilot bootloader
+and firmware.
+
+After the initial installation, update the board through Mission Planner or
+QGroundControl using the vehicle `.apj` file. Firmware builds are available
+from the **Build WeActF405** GitHub Actions workflow artifacts or the
+repository Releases page.
+
 ## Top Contributors
 
 - [Flight code contributors](https://github.com/ArduPilot/ardupilot/graphs/contributors)
