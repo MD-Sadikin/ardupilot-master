@@ -53,6 +53,30 @@ jobs:
           arm-none-eabi-gcc --version
           ccache --version
 
+      - name: Install Python build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          set +e
+          python3 -m pip install --break-system-packages \
+            empy==3.3.4 pexpect future setuptools packaging intelhex \
+            pyserial lxml dronecan
+          pip_status=$?
+          set -e
+
+          if [[ "$pip_status" -ne 0 ]]; then
+            echo "The combined Python dependency install reported an error; retrying packages individually."
+          fi
+
+          for package in pexpect future setuptools packaging intelhex pyserial lxml dronecan; do
+            python3 -m pip install --break-system-packages "$package" || \
+              echo "Warning: optional Python dependency failed to install: $package"
+          done
+
+          python3 -m pip install --break-system-packages empy==3.3.4
+          python3 -c "import em; assert em.__version__ == '3.3.4', em.__version__; print(em.__version__)"
+
       - name: Restore ccache
         uses: ./.github/actions/setup-ccache
         with:
