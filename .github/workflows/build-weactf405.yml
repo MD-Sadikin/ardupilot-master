@@ -58,7 +58,28 @@ jobs:
         with:
           key-suffix: weactf405
 
-      - name: Build firmware and bootloader
+      - name: Build bootloader
+        shell: bash
+        run: |
+          set -euo pipefail
+          ARTIFACT_DIR="${GITHUB_WORKSPACE}/artifacts"
+          LOG="${ARTIFACT_DIR}/build.log"
+          mkdir -p "$ARTIFACT_DIR"
+          : > "$LOG"
+
+          if ! python3 Tools/scripts/build_bootloaders.py "$BOARD" 2>&1 | tee -a "$LOG"; then
+            echo "build_bootloaders.py failed; using direct bootloader build fallback" | tee -a "$LOG"
+            ./waf configure --board "$BOARD" --bootloader 2>&1 | tee -a "$LOG"
+            ./waf bootloader 2>&1 | tee -a "$LOG"
+            mkdir -p Tools/bootloaders
+            cp "build/${BOARD}/bin/AP_Bootloader.bin" "Tools/bootloaders/${BOARD}_bl.bin"
+            cp "build/${BOARD}/bin/AP_Bootloader.hex" "Tools/bootloaders/${BOARD}_bl.hex"
+          fi
+
+          ls -l "Tools/bootloaders/${BOARD}_bl.bin" \
+                "Tools/bootloaders/${BOARD}_bl.hex" | tee -a "$LOG"
+
+      - name: Build firmware
         shell: bash
         run: |
           set -euo pipefail
@@ -77,7 +98,6 @@ jobs:
           ARTIFACT_DIR="${GITHUB_WORKSPACE}/artifacts"
           LOG="${ARTIFACT_DIR}/build.log"
           mkdir -p "$ARTIFACT_DIR"
-          : > "$LOG"
 
           echo "Building ${VEHICLE} for ${BOARD}" | tee -a "$LOG"
           ./waf configure --board "$BOARD" 2>&1 | tee -a "$LOG"
@@ -86,13 +106,17 @@ jobs:
           FIRMWARE_ELF="${BIN_DIR}/${BINARY}"
           FIRMWARE_BIN="${BIN_DIR}/${BINARY}.bin"
           FIRMWARE_APJ="${BIN_DIR}/${BINARY}.apj"
+          FIRMWARE_HEX="${BIN_DIR}/${BINARY}_with_bl.hex"
           test -f "$FIRMWARE_ELF"
           test -f "$FIRMWARE_BIN"
           test -f "$FIRMWARE_APJ"
+          test -f "$FIRMWARE_HEX"
 
-          # Preserve firmware outputs before the bootloader reconfiguration.
           cp "$FIRMWARE_BIN" "$ARTIFACT_DIR/"
           cp "$FIRMWARE_APJ" "$ARTIFACT_DIR/"
+          cp "$FIRMWARE_HEX" "$ARTIFACT_DIR/"
+          cp "Tools/bootloaders/${BOARD}_bl.bin" "$ARTIFACT_DIR/"
+          cp "Tools/bootloaders/${BOARD}_bl.hex" "$ARTIFACT_DIR/"
 
           SIZE_LINE="$(arm-none-eabi-size "$FIRMWARE_ELF" | tail -n 1)"
           read -r TEXT DATA BSS DEC HEX FILE <<< "$SIZE_LINE"
@@ -114,23 +138,6 @@ jobs:
             echo "Firmware size:"
             echo "  text=${TEXT} data=${DATA} bss=${BSS} flash=${FLASH} ram=${RAM}"
           } | tee "$ARTIFACT_DIR/firmware-size.txt" >> "$LOG"
-
-          ./waf configure --board "$BOARD" --bootloader 2>&1 | tee -a "$LOG"
-          ./waf bootloader 2>&1 | tee -a "$LOG"
-
-          BOOTLOADER_BIN="${BUILD_DIR}/bin/AP_Bootloader.bin"
-          BOOTLOADER_HEX="${BUILD_DIR}/bin/AP_Bootloader.hex"
-          test -f "$BOOTLOADER_BIN"
-          test -f "$BOOTLOADER_HEX"
-          cp "$BOOTLOADER_BIN" "$ARTIFACT_DIR/WeActF405_bootloader.bin"
-          cp "$BOOTLOADER_HEX" "$ARTIFACT_DIR/WeActF405_bootloader.hex"
-
-          python3 Tools/scripts/make_intel_hex.py \
-            "$ARTIFACT_DIR/${BINARY}.bin" \
-            "$BOOTLOADER_BIN" \
-            64
-          test -f "$ARTIFACT_DIR/${BINARY}_with_bl.hex"
-          rm -f "$ARTIFACT_DIR/${BINARY}.hex"
 
           echo "Artifacts:" | tee -a "$LOG"
           find "$ARTIFACT_DIR" -maxdepth 1 -type f -printf '%f\n' | sort | tee -a "$LOG"
