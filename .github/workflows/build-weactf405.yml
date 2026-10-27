@@ -166,6 +166,18 @@ jobs:
           echo "Artifacts:" | tee -a "$LOG"
           find "$ARTIFACT_DIR" -maxdepth 1 -type f -printf '%f\n' | sort | tee -a "$LOG"
 
+      - name: Upload generated ChibiOS configuration on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: WeActF405-generated-config-${{ github.sha }}
+          path: |
+            build/WeActF405/hwdef.h
+            build/WeActF405/**/hwdef.h
+            build/WeActF405/**/mcuconf.h
+          if-no-files-found: warn
+          retention-days: 30
+
       - name: Save ccache
         uses: ./.github/actions/save-ccache
         with:

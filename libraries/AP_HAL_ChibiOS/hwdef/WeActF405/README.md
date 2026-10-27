@@ -28,6 +28,8 @@ pinout reference. It does not copy INAV firmware code.
 | PB7 | I2C1 SDA | User-supplied wiring | High |
 | PB10 | USART3 TX, GPS | User-supplied wiring | High |
 | PB11 | USART3 RX, GPS | User-supplied wiring | High |
+| PC0 | Battery voltage ADC1 input placeholder | Unused ADC1-capable pin; carrier wiring is unverified | Low |
+| PC1 | Battery current ADC1 input placeholder | Unused ADC1-capable pin; carrier wiring is unverified | Low |
 | PA2 | USART2 TX, RC/telemetry candidate | Public reference pinout | Medium |
 | PA3 | USART2 RX, RC/telemetry candidate | Public reference pinout | Medium |
 | PA0 | UART4 TX, spare | Public reference pinout | Medium |
@@ -46,12 +48,12 @@ pinout reference. It does not copy INAV firmware code.
 - RC and telemetry connector wiring and the intended USART2 direction.
 - PWM signal levels, connector mapping, and whether all six motor pads are
   populated on the particular core-board carrier.
-- Battery-voltage ADC pin and divider ratio. The public reference labels PC4
-  as a battery ADC input, but PC4 is explicitly required here for the MPU6500
-  interrupt, so no battery ADC pin or voltage scale is guessed.
+- Battery-voltage and current ADC wiring. PC0 and PC1 are only unused ADC1
+  placeholders to provide a valid ADC1 DMA configuration; their carrier
+  connections must be verified.
+- Battery-voltage divider ratio and current-sensor scale. The hwdef uses
+  neutral placeholder scales of `1.0`; these must not be used without
+  hardware measurement.
 - Discrete status LED pin and polarity. PB1 is labelled as an LED-strip
   output in the reference, not a confirmed status LED.
 - BMP280 address if the module is strapped to `0x77` instead of `0x76`.
-
-The GitHub Actions workflow requested for this board was not added because the
-task also explicitly prohibits creating or editing any GitHub Actions workflow.
