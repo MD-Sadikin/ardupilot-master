@@ -1,0 +1,158 @@
+name: Build WeActF405
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      vehicle:
+        description: Vehicle firmware to build
+        required: true
+        default: copter
+        type: choice
+        options:
+          - copter
+          - plane
+          - rover
+          - sub
+
+permissions:
+  contents: write
+  actions: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BOARD: WeActF405
+      VEHICLE_INPUT: ${{ inputs.vehicle }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          submodules: recursive
+
+      - name: Install build dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          Tools/environment_install/install-prereqs-ubuntu.sh -y
+          if [[ -f "$HOME/.profile" ]]; then
+            source "$HOME/.profile"
+          fi
+          {
+            echo "/opt/gcc-arm-none-eabi-10-2020-q4-major/bin"
+            echo "/usr/lib/ccache"
+            echo "$HOME/.local/bin"
+          } >> "$GITHUB_PATH"
+          export PATH="/opt/gcc-arm-none-eabi-10-2020-q4-major/bin:/usr/lib/ccache:$HOME/.local/bin:$PATH"
+          arm-none-eabi-gcc --version
+          ccache --version
+
+      - name: Restore ccache
+        uses: ./.github/actions/setup-ccache
+        with:
+          key-suffix: weactf405
+
+      - name: Build firmware and bootloader
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VEHICLE="${VEHICLE_INPUT:-copter}"
+          case "$VEHICLE" in
+            copter) BINARY=arducopter ;;
+            plane) BINARY=arduplane ;;
+            rover) BINARY=ardurover ;;
+            sub) BINARY=ardusub ;;
+            *) echo "Unsupported vehicle: $VEHICLE" >&2; exit 1 ;;
+          esac
+
+          BUILD_DIR="build/${BOARD}"
+          BIN_DIR="${BUILD_DIR}/bin"
+          ARTIFACT_DIR="${GITHUB_WORKSPACE}/artifacts"
+          LOG="${ARTIFACT_DIR}/build.log"
+          mkdir -p "$ARTIFACT_DIR"
+          : > "$LOG"
+
+          echo "Building ${VEHICLE} for ${BOARD}" | tee -a "$LOG"
+          ./waf configure --board "$BOARD" 2>&1 | tee -a "$LOG"
+          ./waf "$VEHICLE" 2>&1 | tee -a "$LOG"
+
+          FIRMWARE_ELF="${BIN_DIR}/${BINARY}"
+          FIRMWARE_BIN="${BIN_DIR}/${BINARY}.bin"
+          FIRMWARE_APJ="${BIN_DIR}/${BINARY}.apj"
+          test -f "$FIRMWARE_ELF"
+          test -f "$FIRMWARE_BIN"
+          test -f "$FIRMWARE_APJ"
+
+          # Preserve firmware outputs before the bootloader reconfiguration.
+          cp "$FIRMWARE_BIN" "$ARTIFACT_DIR/"
+          cp "$FIRMWARE_APJ" "$ARTIFACT_DIR/"
+
+          SIZE_LINE="$(arm-none-eabi-size "$FIRMWARE_ELF" | tail -n 1)"
+          read -r TEXT DATA BSS DEC HEX FILE <<< "$SIZE_LINE"
+          FLASH=$((TEXT + DATA))
+          RAM=$((DATA + BSS))
+          {
+            echo "## WeActF405 ${VEHICLE} size"
+            echo
+            echo "| Metric | Bytes | Limit |"
+            echo "| --- | ---: | ---: |"
+            echo "| Flash (text + data) | ${FLASH} | 983040 |"
+            echo "| RAM (data + bss) | ${RAM} | 196608 |"
+            echo
+            echo '```'
+            echo "arm-none-eabi-size: ${SIZE_LINE}"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          {
+            echo "Firmware size:"
+            echo "  text=${TEXT} data=${DATA} bss=${BSS} flash=${FLASH} ram=${RAM}"
+          } | tee "$ARTIFACT_DIR/firmware-size.txt" >> "$LOG"
+
+          ./waf configure --board "$BOARD" --bootloader 2>&1 | tee -a "$LOG"
+          ./waf bootloader 2>&1 | tee -a "$LOG"
+
+          BOOTLOADER_BIN="${BUILD_DIR}/bin/AP_Bootloader.bin"
+          BOOTLOADER_HEX="${BUILD_DIR}/bin/AP_Bootloader.hex"
+          test -f "$BOOTLOADER_BIN"
+          test -f "$BOOTLOADER_HEX"
+          cp "$BOOTLOADER_BIN" "$ARTIFACT_DIR/WeActF405_bootloader.bin"
+          cp "$BOOTLOADER_HEX" "$ARTIFACT_DIR/WeActF405_bootloader.hex"
+
+          python3 Tools/scripts/make_intel_hex.py \
+            "$ARTIFACT_DIR/${BINARY}.bin" \
+            "$BOOTLOADER_BIN" \
+            64
+          test -f "$ARTIFACT_DIR/${BINARY}_with_bl.hex"
+          rm -f "$ARTIFACT_DIR/${BINARY}.hex"
+
+          echo "Artifacts:" | tee -a "$LOG"
+          find "$ARTIFACT_DIR" -maxdepth 1 -type f -printf '%f\n' | sort | tee -a "$LOG"
+
+      - name: Save ccache
+        uses: ./.github/actions/save-ccache
+        with:
+          key-suffix: weactf405
+
+      - name: Upload build artifacts
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: WeActF405-${{ inputs.vehicle || 'copter' }}-${{ github.sha }}
+          path: artifacts
+          if-no-files-found: warn
+          retention-days: 30
+
+      - name: Publish GitHub release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+          files: artifacts/*

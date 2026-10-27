@@ -1,0 +1,2 @@
+# No board-specific parameter defaults are safe to set before hardware
+# verification of the RC, battery-monitor, and status-LED wiring.

@@ -1,0 +1,20 @@
+# Minimal USB DFU bootloader hwdef for the WeAct STM32F405RGT6 core board.
+
+MCU STM32F4xx STM32F405xx
+APJ_BOARD_ID AP_HW_WEACTF405
+OSCILLATOR_HZ 8000000
+STM32_VDD 330U
+
+FLASH_SIZE_KB 1024
+FLASH_RESERVE_START_KB 0
+FLASH_BOOTLOADER_LOAD_KB 64
+
+SERIAL_ORDER OTG1
+PA11 OTG_FS_DM OTG1
+PA12 OTG_FS_DP OTG1
+
+# Keep the MPU chip-select inactive while the bootloader is running.
+PA4 MPU6500_CS CS
+
+# No discrete status LED is assigned until the board hardware is verified.
+define HAL_LED_ON 0
