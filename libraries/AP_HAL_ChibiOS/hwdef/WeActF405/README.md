@@ -63,8 +63,12 @@ pinout reference. It does not copy INAV firmware code.
 
 The firmware uses these fixed sensor interfaces:
 
-- MPU6500: SPI1 SCK PA5, MISO PA6, MOSI PA7, CS PA4, interrupt PC4.
-- BMP280: I2C1 SCL PB6, SDA PB7, address `0x76`.
+- MPU6500 module: `SCLK` PA5, `MISO` PA6, `SDA/MOSI` PA7,
+  `NCS/CS` PA4, and `INT` PC4. The board definition uses the
+  `Invensense` MPU60x0-family backend for this sensor.
+- BMP280 module: `SCL/SCK` PB6, `SDA/MOSI` PB7, `CSB/CS` high for I2C,
+  and `SDO/MISO` selecting the I2C address. The board definition currently
+  probes address `0x76`.
 
 If both sensors fail at the same time, first verify that both modules share a
 common ground with the WeAct board, are powered at a voltage compatible with
