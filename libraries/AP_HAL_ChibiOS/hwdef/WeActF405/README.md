@@ -19,21 +19,22 @@ pinout reference. It does not copy INAV firmware code.
 
 | Pin | Function | Justification | Confidence |
 | --- | --- | --- | --- |
-| PA4 | MPU6500 CS | User-supplied wiring | High |
-| PA5 | SPI1 SCK | User-supplied wiring | High |
-| PA6 | SPI1 MISO | User-supplied wiring | High |
-| PA7 | SPI1 MOSI | User-supplied wiring | High |
-| PC4 | MPU6500 interrupt | User-supplied wiring | High |
-| PB6 | I2C1 SCL | User-supplied wiring | High |
-| PB7 | I2C1 SDA | User-supplied wiring | High |
-| PB10 | USART3 TX, GPS | User-supplied wiring | High |
-| PB11 | USART3 RX, GPS | User-supplied wiring | High |
+| PB12 | MPU6500 CS | Tested board hwdef | High |
+| PB13 | SPI2 SCK | Tested board hwdef | High |
+| PC2 | SPI2 MISO | Tested board hwdef | High |
+| PC3 | SPI2 MOSI | Tested board hwdef | High |
+| PB10 | I2C2 SCL, BMP280 | Tested board hwdef | High |
+| PB11 | I2C2 SDA, BMP280 | Tested board hwdef | High |
 | PC0 | Battery voltage ADC1 input placeholder | Unused ADC1-capable pin; carrier wiring is unverified | Low |
 | PC1 | Battery current ADC1 input placeholder | Unused ADC1-capable pin; carrier wiring is unverified | Low |
 | PA2 | USART2 TX, RC/telemetry candidate | Public reference pinout | Medium |
 | PA3 | USART2 RX, RC/telemetry candidate | Public reference pinout | Medium |
-| PA0 | UART4 TX, spare | Public reference pinout | Medium |
-| PA1 | UART4 RX, spare | Public reference pinout | Medium |
+| PA0 | UART4 TX, GPS | Tested board hwdef | High |
+| PA1 | UART4 RX, GPS | Tested board hwdef | High |
+| PB6 | USART1 TX | Tested board hwdef | High |
+| PB7 | USART1 RX | Tested board hwdef | High |
+| PC6 | USART6 TX | Tested board hwdef | High |
+| PC7 | USART6 RX | Tested board hwdef | High |
 | PB2 | Onboard blue notification LED | User-provided board detail | High |
 | PB8 | Motor 1 PWM | Public reference pinout; TIM4_CH3 alternate function | Medium |
 | PB5 | Motor 2 PWM | Public reference pinout; TIM3_CH2 alternate function | Medium |
@@ -46,7 +47,7 @@ pinout reference. It does not copy INAV firmware code.
 ## Needs hardware verification
 
 - Sensor board orientation; `ROTATION_NONE` is only a build-time placeholder.
-- RC and telemetry connector wiring and the intended USART2 direction.
+- RC input wiring on USART2 and telemetry connector wiring on USART1/USART6.
 - PWM signal levels, connector mapping, and whether all six motor pads are
   populated on the particular core-board carrier.
 - Battery-voltage and current ADC wiring. PC0 and PC1 are only unused ADC1
@@ -61,19 +62,17 @@ pinout reference. It does not copy INAV firmware code.
 
 ## Sensor bring-up checks
 
-The firmware uses these fixed sensor interfaces:
+The firmware uses these tested sensor interfaces:
 
-- MPU6500 module: `SCLK` PA5, `MISO` PA6, `SDA/MOSI` PA7,
-  `NCS/CS` PA4, and `INT` PC4. The board definition uses the
+- MPU6500 module: `SCLK` PB13, `MISO` PC2, `SDA/MOSI` PC3,
+  `NCS/CS` PB12, and no interrupt pin is required by this tested
+  configuration. The board definition uses the
   `Invensense` MPU60x0-family backend for this sensor.
-- BMP280 module: `SCL/SCK` PB6, `SDA/MOSI` PB7, `CSB/CS` high for I2C,
+- BMP280 module: `SCL/SCK` PB10, `SDA/MOSI` PB11, `CSB/CS` high for I2C,
   and `SDO/MISO` selecting the I2C address. The board definition currently
   probes address `0x76`.
 
-If both sensors fail at the same time, first verify that both modules share a
-common ground with the WeAct board, are powered at a voltage compatible with
-their breakout boards, and are connected according to their labelled pins
-rather than an assumed connector order. For the MPU6500, verify CS is wired
-to PA4 and that the module is in SPI mode rather than I2C mode. For the
-BMP280, verify the module is configured for I2C and check whether its address
-is `0x76` or `0x77`; the current firmware definition is `0x76`.
+The original PA5/PA6/PA7/PA4 and PB6/PB7 assignments were based on the
+initial wiring description, but the tested board hwdef supplied for this
+hardware uses the SPI2/I2C2 assignments above. Use the tested assignments
+when reproducing the known-good firmware behavior.
