@@ -20,40 +20,41 @@ STORAGE_FLASH_PAGE 2
 define HAL_STORAGE_SIZE 15360
 
 # USB
-SERIAL_ORDER OTG1 USART3 USART2 UART4
+SERIAL_ORDER OTG1 USART1 USART2 UART4 USART6
 PA11 OTG_FS_DM OTG1
 PA12 OTG_FS_DP OTG1
 
-# User-specified GPS wiring on USART3
-PB10 USART3_TX USART3
-PB11 USART3_RX USART3
+# GPS on UART4, matching the tested board definition.
+PA0 UART4_TX UART4 NODMA
+PA1 UART4_RX UART4 NODMA
+define DEFAULT_SERIAL4_PROTOCOL SerialProtocol_GPS
 
-# Reference pinout: UART2 is available for RC input or telemetry.
-# The external wiring still requires hardware verification.
+# RC input on USART2.
 PA2 USART2_TX USART2
-PA3 USART2_RX USART2
+PA3 USART2_RX USART2 ALT(1)
+PA3 TIM9_CH2 TIM9 RCININT PULLDOWN LOW
 
-# Additional UART exposed by the reference pinout; not assigned a default use.
-PA0 UART4_TX UART4
-PA1 UART4_RX UART4
+# USART1 and USART6 are available for telemetry and other serial devices.
+PB6 USART1_TX USART1
+PB7 USART1_RX USART1
+PC6 USART6_TX USART6
+PC7 USART6_RX USART6 NODMA
 
 # Onboard blue user LED.
 define AP_NOTIFY_GPIO_LED_1_ENABLED 1
 PB2 LED_BLUE OUTPUT LOW GPIO(0)
 define AP_NOTIFY_GPIO_LED_1_PIN 0
 
-# User-specified I2C1 wiring. This bus is shared by the BMP280 and optional
-# external compass.
-I2C_ORDER I2C1
-PB6 I2C1_SCL I2C1
-PB7 I2C1_SDA I2C1
+# Tested BMP280 bus wiring.
+I2C_ORDER I2C2
+PB10 I2C2_SCL I2C2
+PB11 I2C2_SDA I2C2
 
-# User-specified MPU6500 wiring on SPI1
-PA5 SPI1_SCK SPI1
-PA6 SPI1_MISO SPI1
-PA7 SPI1_MOSI SPI1
-PA4 MPU6500_CS CS
-PC4 EXTI_MPU6500 INPUT
+# Tested MPU6500 wiring on SPI2.
+PB13 SPI2_SCK SPI2
+PC2 SPI2_MISO SPI2
+PC3 SPI2_MOSI SPI2
+PB12 MPU6500_CS CS
 
 # ADC inputs are placeholders until the carrier-board wiring is verified.
 define HAL_USE_ADC TRUE
@@ -65,7 +66,7 @@ define HAL_BATT_CURR_PIN 11
 define HAL_BATT_VOLT_SCALE 1.0
 define HAL_BATT_CURR_SCALE 1.0
 
-# Motor outputs confirmed by the public reference pinout.
+# Motor outputs from the tested board definition.
 PB8  TIM4_CH3 TIM4 PWM(1) GPIO(50)
 PB5  TIM3_CH2 TIM3 PWM(2) GPIO(51)
 PB4  TIM3_CH1 TIM3 PWM(3) GPIO(52)
@@ -78,15 +79,16 @@ PB9 BUZZER OUTPUT GPIO(80) LOW
 define HAL_BUZZER_PIN 80
 
 # SPI device and IMU
-SPIDEV mpu6500 SPI1 DEVID1 MPU6500_CS MODE3 1*MHZ 8*MHZ
-IMU Invensense SPI:mpu6500 ROTATION_NONE
+SPIDEV mpu6500 SPI2 DEVID1 MPU6500_CS MODE3 2*MHZ 8*MHZ
+IMU Invensense SPI:mpu6500 ROTATION_YAW_90
 
 # BMP280 at the standard BMP280 I2C address.
 BARO BMP280 I2C:0:0x76
 define AP_BARO_BACKEND_DEFAULT_ENABLED 0
 define AP_BARO_BMP280_ENABLED 1
 
-# Allow an optional external I2C compass on the shared I2C1 bus.
+# No compass is required for this tested configuration.
+define ALLOW_ARM_NO_COMPASS
 define AP_COMPASS_PROBING_ENABLED 1
 define HAL_I2C_INTERNAL_MASK 0
 define HAL_COMPASS_AUTO_ROT_DEFAULT 2

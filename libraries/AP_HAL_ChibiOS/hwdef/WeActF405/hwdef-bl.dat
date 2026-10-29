@@ -14,7 +14,9 @@ PA11 OTG_FS_DM OTG1
 PA12 OTG_FS_DP OTG1
 
 # Keep the MPU chip-select inactive while the bootloader is running.
-PA4 MPU6500_CS CS
+PB12 MPU6500_CS CS
 
-# No discrete status LED is assigned until the board hardware is verified.
+# Onboard blue user LED.
+PB2 LED_BOOTLOADER OUTPUT LOW GPIO(0)
+
 define HAL_LED_ON 0
