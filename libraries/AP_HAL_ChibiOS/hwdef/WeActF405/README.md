@@ -34,6 +34,7 @@ pinout reference. It does not copy INAV firmware code.
 | PA3 | USART2 RX, RC/telemetry candidate | Public reference pinout | Medium |
 | PA0 | UART4 TX, spare | Public reference pinout | Medium |
 | PA1 | UART4 RX, spare | Public reference pinout | Medium |
+| PB2 | Onboard blue notification LED | User-provided board detail | High |
 | PB8 | Motor 1 PWM | Public reference pinout; TIM4_CH3 alternate function | Medium |
 | PB5 | Motor 2 PWM | Public reference pinout; TIM3_CH2 alternate function | Medium |
 | PB4 | Motor 3 PWM | Public reference pinout; TIM3_CH1 alternate function | Medium |
@@ -54,6 +55,25 @@ pinout reference. It does not copy INAV firmware code.
 - Battery-voltage divider ratio and current-sensor scale. The hwdef uses
   neutral placeholder scales of `1.0`; these must not be used without
   hardware measurement.
-- Discrete status LED pin and polarity. PB1 is labelled as an LED-strip
-  output in the reference, not a confirmed status LED.
+- Onboard blue LED polarity. The hwdef assumes PB2 is active-low; verify this
+  if the LED indication is inverted.
 - BMP280 address if the module is strapped to `0x77` instead of `0x76`.
+
+## Sensor bring-up checks
+
+The firmware uses these fixed sensor interfaces:
+
+- MPU6500 module: `SCLK` PA5, `MISO` PA6, `SDA/MOSI` PA7,
+  `NCS/CS` PA4, and `INT` PC4. The board definition uses the
+  `Invensense` MPU60x0-family backend for this sensor.
+- BMP280 module: `SCL/SCK` PB6, `SDA/MOSI` PB7, `CSB/CS` high for I2C,
+  and `SDO/MISO` selecting the I2C address. The board definition currently
+  probes address `0x76`.
+
+If both sensors fail at the same time, first verify that both modules share a
+common ground with the WeAct board, are powered at a voltage compatible with
+their breakout boards, and are connected according to their labelled pins
+rather than an assumed connector order. For the MPU6500, verify CS is wired
+to PA4 and that the module is in SPI mode rather than I2C mode. For the
+BMP280, verify the module is configured for I2C and check whether its address
+is `0x76` or `0x77`; the current firmware definition is `0x76`.
