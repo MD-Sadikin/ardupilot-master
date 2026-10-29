@@ -59,6 +59,7 @@ pinout reference. It does not copy INAV firmware code.
 - Onboard blue LED polarity. The hwdef assumes PB2 is active-low; verify this
   if the LED indication is inverted.
 - BMP280 address if the module is strapped to `0x77` instead of `0x76`.
+- QMC5883L board orientation; `ROTATION_NONE` is a build-time placeholder.
 
 ## Sensor bring-up checks
 
@@ -71,6 +72,7 @@ The firmware uses these tested sensor interfaces:
 - BMP280 module: `SCL/SCK` PB10, `SDA/MOSI` PB11, `CSB/CS` high for I2C,
   and `SDO/MISO` selecting the I2C address. The board definition currently
   probes address `0x76`.
+- QMC5883L compass: PB10/PB11 on the same I2C2 bus, address `0x0D`.
 
 The original PA5/PA6/PA7/PA4 and PB6/PB7 assignments were based on the
 initial wiring description, but the tested board hwdef supplied for this
