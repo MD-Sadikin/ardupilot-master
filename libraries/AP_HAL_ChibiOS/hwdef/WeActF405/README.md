@@ -7,9 +7,10 @@ ArduPilot board definition for the WeAct STM32F405RGT6 core board:
 - 1 MB flash
 - 192 KB RAM
 - USB-C through the STM32 USB FS pins
-- MPU6500 on SPI1
-- BMP280 and optional external compass on I2C1
-- u-blox GPS on USART3
+- MPU6500 on SPI2
+- BMP280 and QMC5883L compass on I2C2
+- u-blox GPS on UART4
+- External 16 MB SPI NOR flash on SPI1 for DataFlash logging
 
 The board definition intentionally contains only pins confirmed by the
 requested wiring or the public `rizacelik/STM32F405RGT6_INAV_Firmware`
@@ -35,12 +36,10 @@ pinout reference. It does not copy INAV firmware code.
 | PB7 | USART1 RX | Tested board hwdef | High |
 | PC6 | USART6 TX | Tested board hwdef | High |
 | PC7 | USART6 RX | Tested board hwdef | High |
-| PC8 | Onboard microSD DAT0 | Official WeActStudio F405 core-board schematic | High |
-| PC9 | Onboard microSD DAT1 | Official WeActStudio F405 core-board schematic | High |
-| PC10 | Onboard microSD DAT2 | Official WeActStudio F405 core-board schematic | High |
-| PC11 | Onboard microSD DAT3 | Official WeActStudio F405 core-board schematic | High |
-| PC12 | Onboard microSD CLK | Official WeActStudio F405 core-board schematic | High |
-| PD2 | Onboard microSD CMD | Official WeActStudio F405 core-board schematic | High |
+| PA4 | External SPI flash CS | SPI1 DataFlash wiring for the supplied flash module | Medium |
+| PA5 | External SPI flash CLK / SPI1 SCK | SPI1 alternate-function table | High |
+| PA6 | External SPI flash DO / SPI1 MISO | SPI1 alternate-function table | High |
+| PA7 | External SPI flash DI / SPI1 MOSI | SPI1 alternate-function table | High |
 | PB2 | Onboard blue notification LED | User-provided board detail | High |
 | PB8 | Motor 1 PWM | Public reference pinout; TIM4_CH3 alternate function | Medium |
 | PB5 | Motor 2 PWM | Public reference pinout; TIM3_CH2 alternate function | Medium |
@@ -66,8 +65,11 @@ pinout reference. It does not copy INAV firmware code.
   if the LED indication is inverted.
 - BMP280 address if the module is strapped to `0x77` instead of `0x76`.
 - QMC5883L board orientation; `ROTATION_NONE` is a build-time placeholder.
-- microSD card logging has been enabled on the onboard slot using SDMMC1;
-  card-detect wiring is not used by this definition.
+- Flash module exact part number and voltage. It must be a 3.3 V SPI NOR
+  device; do not connect a USB flash drive directly to these pins.
+- Flash module `WP#` and `HOLD#` pull-ups to 3.3 V.
+- External 16 MB SPI NOR flash logging is enabled. The pictured module is
+  expected to be W25Q128-class; confirm its exact part marking.
 
 ## Sensor bring-up checks
 
@@ -81,13 +83,8 @@ The firmware uses these tested sensor interfaces:
   and `SDO/MISO` selecting the I2C address. The board definition currently
   probes address `0x76`.
 - QMC5883L compass: PB10/PB11 on the same I2C2 bus, address `0x0D`.
-- Onboard microSD slot: SDMMC1 4-bit mode using PC8/PC9/PC10/PC11 for
-  DAT0-DAT3, PC12 for CLK, and PD2 for CMD. FATFS logging is enabled.
-
-Use a FAT32-formatted microSD card. A single MBR partition is recommended;
-exFAT is not supported by this configuration. The slot is powered and wired
-by the core board, so no external SD pull-up or card-detect connection is
-required from the user.
+- External SPI flash logging: `CLK` PA5, `DO/MISO` PA6, `DI/MOSI` PA7,
+  `CS` PA4, 3.3 V power, and GND. Tie `WP#` and `HOLD#` high to 3.3 V.
 
 The original PA5/PA6/PA7/PA4 and PB6/PB7 assignments were based on the
 initial wiring description, but the tested board hwdef supplied for this
