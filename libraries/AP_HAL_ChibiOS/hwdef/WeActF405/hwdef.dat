@@ -56,16 +56,12 @@ PC2 SPI2_MISO SPI2
 PC3 SPI2_MOSI SPI2
 PB12 MPU6500_CS CS
 
-# Onboard TF/microSD slot on the STM32F405 SDIO1 interface.
-# STM32F4 ChibiOS names these alternate functions SDMMC_Dx/CK/CMD;
-# SDMMC1 is the peripheral instance.
-PC8  SDMMC_D0  SDMMC1
-PC9  SDMMC_D1  SDMMC1
-PC10 SDMMC_D2  SDMMC1
-PC11 SDMMC_D3  SDMMC1
-PC12 SDMMC_CK  SDMMC1
-PD2  SDMMC_CMD SDMMC1
-define HAL_OS_FATFS_IO 1
+# External 16 MB SPI NOR flash (W25Q128-class) for DataFlash logging.
+# SPI1 pins are unused by the tested sensor configuration.
+PA5 SPI1_SCK SPI1
+PA6 SPI1_MISO SPI1
+PA7 SPI1_MOSI SPI1
+PA4 FLASH_CS CS
 
 # ADC inputs are placeholders until the carrier-board wiring is verified.
 define HAL_USE_ADC TRUE
@@ -105,8 +101,12 @@ define AP_COMPASS_PROBING_ENABLED 1
 define HAL_I2C_INTERNAL_MASK 0
 define HAL_COMPASS_AUTO_ROT_DEFAULT 2
 
-# Give the SDMMC and ADC resolvers priority before timer and SPI peripherals.
-DMA_PRIORITY SDMMC* ADC1 TIM* SPI*
+# Give the ADC resolver priority before timer and SPI peripherals.
+DMA_PRIORITY ADC1 TIM* SPI*
+
+# Enable logging to the external SPI NOR flash.
+define HAL_LOGGING_DATAFLASH_ENABLED 1
+SPIDEV dataflash SPI1 DEVID1 FLASH_CS MODE3 500*KHZ 32*MHZ
 
 # Keep Copter within the 1 MB flash limit.
 include ../include/minimize_features.inc
