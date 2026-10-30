@@ -56,6 +56,15 @@ PC2 SPI2_MISO SPI2
 PC3 SPI2_MOSI SPI2
 PB12 MPU6500_CS CS
 
+# Onboard TF/microSD slot on the STM32F405 SDIO1 interface.
+PC8  SDMMC1_D0 SDMMC1
+PC9  SDMMC1_D1 SDMMC1
+PC10 SDMMC1_D2 SDMMC1
+PC11 SDMMC1_D3 SDMMC1
+PC12 SDMMC1_CK SDMMC1
+PD2  SDMMC1_CMD SDMMC1
+define HAL_OS_FATFS_IO 1
+
 # ADC inputs are placeholders until the carrier-board wiring is verified.
 define HAL_USE_ADC TRUE
 define STM32_ADC_USE_ADC1 TRUE
@@ -94,8 +103,8 @@ define AP_COMPASS_PROBING_ENABLED 1
 define HAL_I2C_INTERNAL_MASK 0
 define HAL_COMPASS_AUTO_ROT_DEFAULT 2
 
-# Give the ADC resolver a stream before the timer and SPI peripherals.
-DMA_PRIORITY ADC1 TIM* SPI*
+# Give the SDMMC and ADC resolvers priority before timer and SPI peripherals.
+DMA_PRIORITY SDMMC* ADC1 TIM* SPI*
 
 # Keep Copter within the 1 MB flash limit.
 include ../include/minimize_features.inc
