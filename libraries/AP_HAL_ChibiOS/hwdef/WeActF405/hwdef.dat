@@ -106,7 +106,8 @@ DMA_PRIORITY ADC1 TIM* SPI*
 
 # Enable logging to the external SPI NOR flash.
 define HAL_LOGGING_DATAFLASH_ENABLED 1
-SPIDEV dataflash SPI1 DEVID1 FLASH_CS MODE3 500*KHZ 32*MHZ
+define HAL_LOGGING_DATAFLASH_DRIVER AP_Logger_Flash_JEDEC
+SPIDEV dataflash SPI1 DEVID1 FLASH_CS MODE3 500*KHZ 8*MHZ
 
 # Keep Copter within the 1 MB flash limit.
 include ../include/minimize_features.inc
