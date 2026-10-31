@@ -85,6 +85,8 @@ The firmware uses these tested sensor interfaces:
 - QMC5883L compass: PB10/PB11 on the same I2C2 bus, address `0x0D`.
 - External SPI flash logging: `CLK` PA5, `DO/MISO` PA6, `DI/MOSI` PA7,
   `CS` PA4, 3.3 V power, and GND. Tie `WP#` and `HOLD#` high to 3.3 V.
+  The firmware uses the JEDEC NOR-flash logger at a conservative 8 MHz
+  maximum SPI speed.
 
 The original PA5/PA6/PA7/PA4 and PB6/PB7 assignments were based on the
 initial wiring description, but the tested board hwdef supplied for this
