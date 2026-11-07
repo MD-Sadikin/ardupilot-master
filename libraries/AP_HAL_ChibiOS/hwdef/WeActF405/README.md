@@ -47,6 +47,12 @@ pinout reference. It does not copy INAV firmware code.
 | PB3 | Motor 4 PWM | Public reference pinout; TIM2_CH2 alternate function | Medium |
 | PA10 | Motor 5 PWM | Public reference pinout; TIM1_CH3 alternate function | Medium |
 | PA9 | Motor 6 PWM | Public reference pinout; TIM1_CH2 alternate function | Medium |
+| PA8 | Motor 7 / servo PWM | STM32F405 alternate-function table; TIM1_CH1 | Medium |
+| PB0 | Motor 8 / servo PWM | STM32F405 alternate-function table; TIM3_CH3 | Medium |
+| PB1 | Motor 9 / servo PWM | STM32F405 alternate-function table; TIM3_CH4 | Medium |
+| PA15 | Motor 10 / servo PWM | Exposed on the board; STM32F405 alternate-function table; TIM2_CH1 | High |
+| PB14 | Motor 11 / servo PWM | Exposed on the board; STM32F405 alternate-function table; TIM12_CH1 | High |
+| PB15 | Motor 12 / servo PWM | Exposed on the board; STM32F405 alternate-function table; TIM12_CH2 | High |
 | PB9 | Buzzer | Public reference pinout | Medium |
 
 ## Needs hardware verification
@@ -54,7 +60,12 @@ pinout reference. It does not copy INAV firmware code.
 - Sensor board orientation; `ROTATION_NONE` is only a build-time placeholder.
 - RC input wiring on USART2 and telemetry connector wiring on USART1/USART6.
 - PWM signal levels, connector mapping, and whether all six motor pads are
-  populated on the particular core-board carrier.
+  populated on the particular core-board carrier. Outputs 7-12 require
+  additional exposed pads or wiring from the MCU pins.
+- PC8 and PC9 are intentionally not assigned as PWM outputs because they are
+  associated with the board's onboard SD-card wiring. The previously proposed
+  PD12, PD13, and PD15 pins are not exposed on this core board and are not
+  assigned.
 - Battery-voltage and current ADC wiring. PC0 and PC1 are only unused ADC1
   placeholders to provide a valid ADC1 DMA configuration; their carrier
   connections must be verified.
